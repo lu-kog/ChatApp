@@ -28,51 +28,20 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 
-public class Krish extends Frame implements ActionListener{
+public class Krish{
 	static Logger logger = Logger.getLogger(Krish.class);
-	
-	TextField txtField;
-	static TextArea txtArea;
-	Button sendButton;
-	
+
 	ServerSocket serverSocket;
 	Socket socket;
 	
 	DataInputStream dis;
 	DataOutputStream dos;
-//	static Set<DataOutputStream> dosList = new HashSet<DataOutputStream>();
 	static Map<String, Clients> availClients = new HashMap<String, Clients>();
 	
 	Inet4Address ipAddress;
 	
 	public Krish() {
 		PropertyConfigurator.configure("log4.properties");
-		txtArea = new TextArea();
-		txtField = new TextField(20);
-		sendButton = new Button("Send");
-	    
-		txtArea.setBounds(50, 50, 400, 250);
-        txtField.setBounds(50, 350, 400, 30);
-		
-		add(txtArea);
-		add(txtField);
-		add(sendButton);
-		
-		sendButton.addActionListener(this);
-		
-		setSize(500,500);
-		setTitle("Krish");
-		setVisible(true);
-		
-		// To close the window
-        addWindowListener((WindowListener) new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
-            	logger.fatal("Server Closed!");
-                System.exit(0);
-            }
-        });
-        logger.info("Servers Frame Created");
-        
 		
 		System.out.println("***************************************");
 		
@@ -102,6 +71,9 @@ public class Krish extends Frame implements ActionListener{
 				String cliName = dis.readUTF();
 				Clients newCli = new Clients(socket,cliName);
 				
+				// announce to all
+				Krish.announce(cliName + newCli.ipAddress+" joined!");
+				
 				// save new client along with ip!
 				availClients.put(ipString, newCli);
 				newCli.start();
@@ -114,17 +86,6 @@ public class Krish extends Frame implements ActionListener{
 		
 	}
 	
-	
-	public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == sendButton) {
-        	String msg = txtField.getText();
-    		txtArea.append("You: "+msg+"\n");
-    		txtField.setText("");
-        } else if (e.getSource() == connectButton) {
-            String ipaddr = txtField.getText();
-            txtArea.append("Connecting to "+ipaddr);
-        }
-    }
 	
 	public static void main(String[] args) {
 		new Krish();
@@ -140,6 +101,13 @@ public class Krish extends Frame implements ActionListener{
 		}
 		return availCli;
 	}
+	
+	
+	public static void announce(String msg) {
+		for (Map.Entry<String, Clients> entry : availClients.entrySet()) {
+			entry.getValue().sendMessage(msg);
+		}
+	}
 
 	
 	
@@ -154,7 +122,6 @@ class Clients extends Thread{
 	String ipAddress;
 	boolean isAvail;
 	boolean wantTostop;
-	OnetoOne onetoOne;
 	Clients anotherPerson;
 	Scanner sc = new Scanner(System.in);
 	
@@ -162,58 +129,52 @@ class Clients extends Thread{
 		this.socket = cli;
 		this.Name = name;
 		this.ipAddress = cli.getInetAddress().toString().replace('/', '@');
-		this.isAvail = true;
 		this.dos = new DataOutputStream(cli.getOutputStream());
 	}
 	
-	public void createConnection(Clients anotherCli) {
-//		onetoOne = new OnetoOne(this.socket, anotherCli.socket, this.ipAddress, anotherCli.ipAddress);
-//		onetoOne.start();
-//		
-//		try {
-//			onetoOne.join();
-//		} catch (InterruptedException e) {
-//			//
-//		}
+	public void sendMessage(String msg) {
+		try {
+			this.dos.writeUTF(msg);
+		} catch (IOException e) {
+			// can't send message!
+		}
 		
 	}
-	
+
+	public void createConnection(Clients anotherCli) {
+		this.anotherPerson = anotherCli;
+	}
+
 	@Override
 	public void run() {
 
 		try {
 			Thread.sleep(2000);
 			dis = new DataInputStream(socket.getInputStream());
-			dos.writeUTF(Krish.availClients.size()+"");
-			if (Krish.availClients.size()>1) {
-				// show avail clients 
-				dos.writeUTF(Krish.getAvailClients());
-				String getClientip = dis.readUTF();
-				this.isAvail = false;
-				Krish.availClients.get(getClientip).isAvail=false;
-				Krish.availClients.get(getClientip).createConnection(Krish.availClients.get(this.ipAddress));
-				this.createConnection(Krish.availClients.get(getClientip));
-			}
 			
-			while (Krish.availClients.get(ipAddress).isAvail){
-				try {
-					dos.writeUTF("Select a Ip: ");
-					String msg = dis.readUTF();
-					if (Krish.availClients.get("@"+msg) != null) {
-						String getClientip = msg;
-						this.isAvail = false;
-						Krish.availClients.get(getClientip).isAvail=false;
-						Krish.availClients.get(getClientip).createConnection(Krish.availClients.get(this.ipAddress));
-						this.createConnection(Krish.availClients.get(getClientip));
+			
+				// show avail clients
+				dos.writeUTF(Krish.getAvailClients());
+				String Clientip = dis.readUTF();
+
+				while (this.anotherPerson == null) {
+					Clientip = dis.readUTF();
+					if (Krish.availClients.get(Clientip)!=null) {
+						this.anotherPerson = Krish.availClients.get(Clientip);
+						break;
 					}
-					System.out.println(Name+": suthudhu..");
+				}
+			
+
+			while (true){
+				try {
+					String msg = dis.readUTF();
+					this.anotherPerson.sendMessage(Name+msg);
 				} catch (Exception e) {
 					System.out.println("Client left!");
 					break;
 				}			
 			}
-			
-			onetoOne.join();
 			
 			
 			System.out.println(this.Name+" "+"Sethuttan..");
@@ -225,62 +186,64 @@ class Clients extends Thread{
 
 }
 
-class OnetoOne extends Thread{
-	Socket clientA;
-	Socket clientB;
-	String clientAname;
-	String clientBname;
-	String cliAip;
-	String cliBip;
 
-	public OnetoOne(Socket a, Socket b, String cliAName, String cliBName) {
-		this.clientA = a;
-		this.clientB = b;
-		this.clientAname = cliAName;
-		this.clientBname = cliBName;
-		this.cliAip = clientA.getInetAddress().toString().replace('/', '@');
-		this.cliBip = clientB.getInetAddress().toString().replace('/', '@');
-	}
 
-	
-	@Override
-	public void run() {
-		try {
-			Krish.availClients.get(cliAip).wantTostop = false;			
-			
-			DataInputStream dis = new DataInputStream(clientA.getInputStream());
-			DataOutputStream dos = new DataOutputStream(clientB.getOutputStream());
-			Thread.sleep(3000);
-			dos.writeUTF("**********");
-			dos.writeUTF(clientBname);
-			dos.writeUTF(cliBip);
-			dos.writeUTF("***********");
-			String nameString = Krish.availClients.get(cliAip).Name;
-
-			
-			System.out.println(Krish.availClients.size());
-			System.out.println();
-			
-			while (true){
-				try {
-					String msg = dis.readUTF();
-					dos.writeUTF(nameString+": "+msg);
-			
-				} catch (Exception e) {
-					System.out.println("Client left!");
-					break;
-				}			
-			}
-			
-			System.out.println("******w***********************");
-			
-		} catch (IOException e) {
-			System.out.println("*******a**********************");
-		} catch (InterruptedException e1) {
-			System.out.println("*********b********************");
-		}
-		
-	}
-	
-	
-}
+//class OnetoOne extends Thread{
+//	Socket clientA;
+//	Socket clientB;
+//	String clientAname;
+//	String clientBname;
+//	String cliAip;
+//	String cliBip;
+//
+//	public OnetoOne(Socket a, Socket b, String cliAName, String cliBName) {
+//		this.clientA = a;
+//		this.clientB = b;
+//		this.clientAname = cliAName;
+//		this.clientBname = cliBName;
+//		this.cliAip = clientA.getInetAddress().toString().replace('/', '@');
+//		this.cliBip = clientB.getInetAddress().toString().replace('/', '@');
+//	}
+//
+//	
+//	@Override
+//	public void run() {
+//		try {
+//			Krish.availClients.get(cliAip).wantTostop = false;			
+//			
+//			DataInputStream dis = new DataInputStream(clientA.getInputStream());
+//			DataOutputStream dos = new DataOutputStream(clientB.getOutputStream());
+//			Thread.sleep(3000);
+//			dos.writeUTF("**********");
+//			dos.writeUTF(clientBname);
+//			dos.writeUTF(cliBip);
+//			dos.writeUTF("***********");
+//			String nameString = Krish.availClients.get(cliAip).Name;
+//
+//			
+//			System.out.println(Krish.availClients.size());
+//			System.out.println();
+//			
+//			while (true){
+//				try {
+//					String msg = dis.readUTF();
+//					dos.writeUTF(nameString+": "+msg);
+//			
+//				} catch (Exception e) {
+//					System.out.println("Client left!");
+//					break;
+//				}			
+//			}
+//			
+//			System.out.println("******w***********************");
+//			
+//		} catch (IOException e) {
+//			System.out.println("*******a**********************");
+//		} catch (InterruptedException e1) {
+//			System.out.println("*********b********************");
+//		}
+//		
+//	}
+//	
+//	
+//}

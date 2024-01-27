@@ -1,6 +1,8 @@
 package chat;
+import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Frame;
+import java.awt.Scrollbar;
 import java.awt.TextArea;
 import java.awt.TextField;
 import java.awt.event.*;
@@ -43,7 +45,8 @@ public class Client extends Frame implements ActionListener{
         
 		
 		try {
-			byte[] addrs = {(byte) 192, (byte) 168, 5, 66};
+			
+			byte[] addrs = {(byte) 192, (byte) 168, 94, 66};
 			ipAddress = (Inet4Address) InetAddress.getByAddress(addrs);
 			System.out.println("Server IP: "+ ipAddress.getHostAddress());
             
@@ -66,11 +69,9 @@ public class Client extends Frame implements ActionListener{
 		
 
 		try {
-			
 				String availClient = dis.readUTF();
 				txtArea.append(availClient+"\n");
 				txtArea.append("Select a client's ip: ");
-				
 			
 		} catch (IOException e) {
 			
@@ -96,20 +97,28 @@ public class Client extends Frame implements ActionListener{
 	
 	// creating a chat window using frame
 	public void createFrame() {
+		
 		txtArea = new TextArea();
 		txtField = new TextField();
 		sendButton = new Button("Send");
+		connect = new Button("Connect");
 		
+		setLayout(null);
 		sendButton.addActionListener(this);
 		
-		txtArea.setBounds(50, 50, 400, 250);
-        txtField.setBounds(50, 350, 400, 30);
 
-		
+		txtArea.setBounds(0, 10, 500, 250);
+        txtField.setBounds(20, 280, 300, 30);
+        sendButton.setBounds(200, 330, 50, 40);
+        connect.setBounds(10, 330, 70, 40);
+        
+        
 		add(txtArea);
 		add(txtField);
 		add(sendButton);
+		add(connect);
 		
+
 		
 		setSize(500,500);
 		setTitle("You");
@@ -119,7 +128,6 @@ public class Client extends Frame implements ActionListener{
 	
 	
 	public static void main(String[] args) {
-		
 		new Client();
 	}
 
@@ -140,7 +148,7 @@ public class Client extends Frame implements ActionListener{
             String ipaddr = txtField.getText();
             txtArea.append("Connecting to "+ipaddr);
             try {
-				dos.writeUTF(ipaddr);
+				dos.writeUTF("@"+ipaddr);
 			} catch (IOException e1) {
 				System.out.println("Error on send msg!");
 			}
