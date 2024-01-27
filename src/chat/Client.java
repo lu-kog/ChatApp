@@ -1,15 +1,9 @@
 package chat;
-
-
 import java.awt.Button;
 import java.awt.Frame;
 import java.awt.TextArea;
 import java.awt.TextField;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,6 +17,7 @@ public class Client extends Frame implements ActionListener{
 	TextField txtField;
 	TextArea txtArea;
 	Button sendButton;
+	Button connect;
 	
 	Socket socket;
 	DataInputStream dis;
@@ -48,7 +43,7 @@ public class Client extends Frame implements ActionListener{
         
 		
 		try {
-			byte[] addrs = {(byte) 172, 17, 55, (byte) 207};
+			byte[] addrs = {(byte) 192, (byte) 168, 5, 66};
 			ipAddress = (Inet4Address) InetAddress.getByAddress(addrs);
 			System.out.println("Server IP: "+ ipAddress.getHostAddress());
             
@@ -56,7 +51,7 @@ public class Client extends Frame implements ActionListener{
 	            System.out.println("Can't Connect host");
 		}
 		
-		
+
 		// Create client socket
 		try {
 			socket = new Socket(ipAddress, 4455);
@@ -67,6 +62,18 @@ public class Client extends Frame implements ActionListener{
 			
 		} catch (Exception e) {
 			System.out.println("Port connection failed");
+		}
+		
+
+		try {
+			
+				String availClient = dis.readUTF();
+				txtArea.append(availClient+"\n");
+				txtArea.append("Select a client's ip: ");
+				
+			
+		} catch (IOException e) {
+			
 		}
 		
 		while (true){
@@ -116,21 +123,34 @@ public class Client extends Frame implements ActionListener{
 		new Client();
 	}
 
-	@Override
+	@Override	
 	public void actionPerformed(ActionEvent e) {
-		String msg = txtField.getText();
-		txtArea.append(cliName+": "+msg+"\n");
-		txtField.setText("");
-		
-		try {
-			dos.writeUTF(msg);
-			dos.flush();
-		} catch (IOException e1) {
-			System.out.println("Error on send msg!");
-		}
-		
-		
-	}
+        if (e.getSource() == sendButton) {
+        	String msg = txtField.getText();
+    		txtArea.append(cliName+": "+msg+"\n");
+    		txtField.setText("");
+    		
+    		try {
+    			dos.writeUTF(msg);
+    		} catch (IOException e1) {
+    			System.out.println("Error on send msg!");
+    		}
+
+        } else if (e.getSource() == connect) {
+            String ipaddr = txtField.getText();
+            txtArea.append("Connecting to "+ipaddr);
+            try {
+				dos.writeUTF(ipaddr);
+			} catch (IOException e1) {
+				System.out.println("Error on send msg!");
+			}
+        }
+    }
 
 
 }
+
+
+
+
+
