@@ -14,17 +14,14 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
-import java.util.jar.Attributes.Name;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-import com.mysql.cj.protocol.Message;
 
 
 public class Krish{
@@ -179,7 +176,7 @@ public class Krish{
 	
 	//
 	
-	public Map<Date, String> fetchMessages(String senderID, String receiverID) {
+	public static Map<Date, String> fetchMessages(String senderID, String receiverID) {
         // TreeMap to store messages sorted by timestamp
         Map<Date, String> messages = new TreeMap<>();
 
@@ -298,6 +295,22 @@ class Clients extends Thread{
 					
 				}
 			
+			// import previous conversations
+
+			Map<Date, String> recoveredMsgs = Krish.fetchMessages(this.ipAddress, this.anotherPerson.ipAddress);
+			String toImport="\n";
+			if (recoveredMsgs.size() > 0) {
+				for (Map.Entry<Date, String> entry : recoveredMsgs.entrySet()) {
+					
+					toImport += entry.getValue()+"\n";
+					
+				}
+			}
+			try {
+				this.dos.writeUTF(toImport);
+			} catch (IOException e) {
+				logger.error("Can't import previous conversation! to: "+this.ipAddress);
+			}
 
 			while (true){
 				try {
