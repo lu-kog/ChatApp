@@ -1,8 +1,6 @@
 package chat;
-import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Frame;
-import java.awt.Scrollbar;
 import java.awt.TextArea;
 import java.awt.TextField;
 import java.awt.event.*;
@@ -35,7 +33,8 @@ public class Client extends Frame implements ActionListener{
 		System.out.println("Enter Your Name: ");
 		cliName = sc.nextLine();
 		
-		createFrame();
+		createFrame(); // create awt frame chat window
+		
 		// To close the window
         addWindowListener((WindowListener) new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
@@ -46,7 +45,7 @@ public class Client extends Frame implements ActionListener{
 		
 		try {
 			
-			byte[] addrs = {(byte) 192, (byte) 168, 94, 66};
+			byte[] addrs = {(byte) 192, (byte) 168, (byte) 175, 66};
 			ipAddress = (Inet4Address) InetAddress.getByAddress(addrs);
 			System.out.println("Server IP: "+ ipAddress.getHostAddress());
             
@@ -71,10 +70,10 @@ public class Client extends Frame implements ActionListener{
 		try {
 				String availClient = dis.readUTF();
 				txtArea.append(availClient+"\n");
-				txtArea.append("Select a client's ip: ");
+				txtArea.append("Select a client's ip: \n");
 			
 		} catch (IOException e) {
-			
+			System.out.println("Can't get availiable clients!");
 		}
 		
 		while (true){
@@ -91,7 +90,6 @@ public class Client extends Frame implements ActionListener{
 		
 		System.exit(0);
 		
-		
 	}
 	
 	
@@ -105,6 +103,7 @@ public class Client extends Frame implements ActionListener{
 		
 		setLayout(null);
 		sendButton.addActionListener(this);
+		connect.addActionListener(this);
 		
 
 		txtArea.setBounds(0, 10, 500, 250);
@@ -145,6 +144,7 @@ public class Client extends Frame implements ActionListener{
     		}
 
         } else if (e.getSource() == connect) {
+        	System.out.println("Connect button clicked");
             String ipaddr = txtField.getText();
             txtArea.append("Connecting to "+ipaddr);
             try {
