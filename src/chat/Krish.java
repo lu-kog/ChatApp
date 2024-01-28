@@ -162,11 +162,9 @@ public class Krish{
             int affectedRows = stmt.executeUpdate();
 
             
-            if (affectedRows > 0) {
-                logger.info("Message inserted successfully!"+affectedRows);
-            } else {
-                logger.error("Message insertion failed!"+affectedRows);
-            }
+            if (affectedRows < 1) {
+            	logger.error("Message insertion failed!"+affectedRows);
+            } 
        
            } catch (Exception e) {
         	   logger.error("Can't reach database!");
@@ -244,7 +242,7 @@ class Clients extends Thread{
 		try {
 			this.dos.writeUTF(msg);
 		} catch (IOException e) {
-			
+			logger.error("Error on write message!");
 		}
 		
 	}
@@ -290,7 +288,7 @@ class Clients extends Thread{
 					} catch (Exception e) {
 						logger.warn("Client left without connect: "+this.ipAddress);
 						Krish.availClients.remove(this.ipAddress);
-						this.interrupt();
+						this.stop();
 					}
 					
 				}

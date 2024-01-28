@@ -44,8 +44,8 @@ public class Client extends Frame implements ActionListener{
         
 		
 		try {
-			
-			byte[] addrs = {(byte) 192, (byte) 168, (byte) 175, 66};
+			//192.168.175.66
+			byte[] addrs = {(byte) 192, (byte) 168, (byte) 140, 66};
 			ipAddress = (Inet4Address) InetAddress.getByAddress(addrs);
 			System.out.println("Server IP: "+ ipAddress.getHostAddress());
             

@@ -1,0 +1,5 @@
+2024-01-28 19:09:21 INFO  Krish:66 - Server Started @ gokul-zstk330/127.0.1.1
+2024-01-28 19:09:29 INFO  Krish:71 - New handshake!
+2024-01-28 19:09:29 INFO  Krish:137 - Client updated successfully!1
+2024-01-28 19:09:29 INFO  Krish:82 - new client connected! krish@192.168.140.66
+2024-01-28 19:09:43 WARN  Clients:289 - Client left without connect: @192.168.140.66
