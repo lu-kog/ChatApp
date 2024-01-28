@@ -252,6 +252,7 @@ class Clients extends Thread{
 		logger.info("One-One connection established! "+this.ipAddress+"-"+anotherPerson.ipAddress);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void run() {
 
